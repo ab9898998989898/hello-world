@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weather App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #00b4db, #0083b0);
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #333;
+        }
+        
+        .container {
+            width: 90%;
+            max-width: 500px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        header h1 {
+            color: #0083b0;
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        
+        .search-box {
+            display: flex;
+            margin-bottom: 30px;
+        }
+        
+        .search-box input {
+            flex: 1;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 8px 0 0 8px;
+            font-size: 16px;
+            outline: none;
+        }
+        
+        .search-box input:focus {
+            border-color: #0083b0;
+        }
+        
+        .search-box button {
+            background-color: #0083b0;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 0 8px 8px 0;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .search-box button:hover {
+            background-color: #006c93;
+        }
+        
+        .weather-info {
+            display: none;
+            text-align: center;
+        }
+        
+        .location {
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: 10px;
+        }
+        
+        .date {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .temperature {
+            font-size: 60px;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #0083b0;
+        }
+        
+        .weather-condition {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .weather-icon {
+            width: 80px;
+            height: 80px;
+        }
+        
+        .condition-text {
+            font-size: 20px;
+            margin-left: 10px;
+        }
+        
+        .details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .detail-box {
+            background-color: rgba(255, 255, 255, 0.7);
+            border-radius: 12px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .detail-box h4 {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .detail-box p {
+            font-size: 20px;
+            font-weight: 500;
+        }
+        
+        .error-msg {
+            display: none;
+            color: #e74c3c;
+            text-align: center;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .loading::after {
+            content: '';
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 4px solid #ddd;
+            border-top-color: #0083b0;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .container {
+                padding: 20px;
+            }
+            
+            .details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Weather App</h1>
+            <p>Check current weather conditions</p>
+        </header>
+        
+        <div class="search-box">
+            <input type="text" placeholder="Enter city name" id="search-input" value="Paris">
+            <button id="search-btn">Search</button>
+        </div>
+        
+        <div class="loading" id="loading"></div>
+        
+        <div class="error-msg" id="error-msg">
+            City not found. Please try one of our supported cities like London, New York, Paris, Berlin, Tokyo, etc.
+        </div>
+        
+        <div class="weather-info" id="weather-info">
+            <div class="location" id="location">Paris, France</div>
+            <div class="date" id="date"></div>
+            <div class="temperature" id="temperature">24°C</div>
+            
+            <div class="weather-condition">
+                <img class="weather-icon" id="weather-icon" src="https://openweathermap.org/img/wn/01d@2x.png" alt="Weather Icon">
+                <div class="condition-text" id="condition-text">Clear</div>
+            </div>
+            
+            <div class="details">
+                <div class="detail-box">
+                    <h4>Temp Range</h4>
+                    <p id="temp-range">22°C - 26°C</p>
+                </div>
+                <div class="detail-box">
+                    <h4>Humidity</h4>
+                    <p id="humidity">65%</p>
+                </div>
+                <div class="detail-box">
+                    <h4>Rain</h4>
+                    <p id="rain">0 mm</p>
+                </div>
+                <div class="detail-box">
+                    <h4>Sun</h4>
+                    <p id="sun-times">06:00 AM - 08:00 PM</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // DOM Elements
+const searchInput = document.getElementById('search-input');
+const searchBtn = document.getElementById('search-btn');
+const weatherInfo = document.getElementById('weather-info');
+const errorMsg = document.getElementById('error-msg');
+const loadingIndicator = document.getElementById('loading');
+
+const locationElement = document.getElementById('location');
+const dateElement = document.getElementById('date');
+const temperatureElement = document.getElementById('temperature');
+const weatherIcon = document.getElementById('weather-icon');
+const conditionText = document.getElementById('condition-text');
+const tempRange = document.getElementById('temp-range');
+const humidity = document.getElementById('humidity');
+const rain = document.getElementById('rain');
+const sunTimes = document.getElementById('sun-times');
+
+// City database
+const cityDatabase = {
+    // Europe
+    "paris": { 
+        searchTerms: ["paris", "paris france", "france"], 
+        coordinates: { latitude: 48.8566, longitude: 2.3522 },
+        displayName: "Paris, France"
+    },
+    "london": {
+        searchTerms: ["london", "london uk", "london england", "uk"],
+        coordinates: { latitude: 51.5074, longitude: -0.1278 },
+        displayName: "London, UK"
+    },
+    "berlin": {
+        searchTerms: ["berlin", "berlin germany", "germany"],
+        coordinates: { latitude: 52.5200, longitude: 13.4050 },
+        displayName: "Berlin, Germany"
+    },
+    // North America
+    "new york": {
+        searchTerms: ["new york", "nyc", "new york city", "ny", "usa"],
+        coordinates: { latitude: 40.7128, longitude: -74.0060 },
+        displayName: "New York, US"
+    },
+    // Asia
+    "tokyo": {
+        searchTerms: ["tokyo", "tokyo japan", "japan"],
+        coordinates: { latitude: 35.6762, longitude: 139.6503 },
+        displayName: "Tokyo, Japan"
+    },
+    "singapore": {
+        searchTerms: ["singapore", "singapore city"],
+        coordinates: { latitude: 1.3521, longitude: 103.8198 },
+        displayName: "Singapore"
+    },
+    "seoul": {
+        searchTerms: ["seoul", "seoul korea", "south korea"],
+        coordinates: { latitude: 37.5665, longitude: 126.9780 },
+        displayName: "Seoul, South Korea"
+    },
+    "mumbai": {
+        searchTerms: ["mumbai", "mumbai india", "india"],
+        coordinates: { latitude: 19.0760, longitude: 72.8777 },
+        displayName: "Mumbai, India"
+    },
+    "beijing": {
+        searchTerms: ["beijing", "beijing china", "china"],
+        coordinates: { latitude: 39.9042, longitude: 116.4074 },
+        displayName: "Beijing, China"
+    },
+    "shanghai": {
+        searchTerms: ["shanghai", "shanghai china", "china"],
+        coordinates: { latitude: 31.2304, longitude: 121.4737 },
+        displayName: "Shanghai, China"
+    },
+    "hong kong": {
+        searchTerms: ["hong kong", "hong kong china"],
+        coordinates: { latitude: 22.3193, longitude: 114.1694 },
+        displayName: "Hong Kong"
+    },
+    "bangkok": {
+        searchTerms: ["bangkok", "bangkok thailand", "thailand"],
+        coordinates: { latitude: 13.7563, longitude: 100.5018 },
+        displayName: "Bangkok, Thailand"
+    },
+    "delhi": {
+        searchTerms: ["delhi", "new delhi", "delhi india", "india"],
+        coordinates: { latitude: 28.7041, longitude: 77.1025 },
+        displayName: "Delhi, India"
+    },
+    "jakarta": {
+        searchTerms: ["jakarta", "jakarta indonesia", "indonesia"],
+        coordinates: { latitude: -6.2088, longitude: 106.8456 },
+        displayName: "Jakarta, Indonesia"
+    },
+    "manila": {
+        searchTerms: ["manila", "manila philippines", "philippines"],
+        coordinates: { latitude: 14.5995, longitude: 120.9842 },
+        displayName: "Manila, Philippines"
+    },
+    "kuala lumpur": {
+        searchTerms: ["kuala lumpur", "kuala lumpur malaysia", "malaysia"],
+        coordinates: { latitude: 3.1390, longitude: 101.6869 },
+        displayName: "Kuala Lumpur, Malaysia"
+    },
+    "riyadh": {
+        searchTerms: ["riyadh", "riyadh saudi arabia", "saudi arabia"],
+        coordinates: { latitude: 24.7136, longitude: 46.6753 },
+        displayName: "Riyadh, Saudi Arabia"
+    },
+    "dubai": {
+        searchTerms: ["dubai", "dubai uae", "uae"],
+        coordinates: { latitude: 25.2048, longitude: 55.2708 },
+        displayName: "Dubai, UAE"
+    },
+    "osaka": {
+        searchTerms: ["osaka", "osaka japan", "japan"],
+        coordinates: { latitude: 34.6937, longitude: 135.5023 },
+        displayName: "Osaka, Japan"
+    },
+    "taipei": {
+        searchTerms: ["taipei", "taipei taiwan", "taiwan"],
+        coordinates: { latitude: 25.0330, longitude: 121.5654 },
+        displayName: "Taipei, Taiwan"
+    },
+    "dhaka": {
+        searchTerms: ["dhaka", "dhaka bangladesh", "bangladesh"],
+        coordinates: { latitude: 23.8103, longitude: 90.4125 },
+        displayName: "Dhaka, Bangladesh"
+    },
+    "karachi": {
+        searchTerms: ["karachi", "karachi pakistan", "pakistan"],
+        coordinates: { latitude: 24.8607, longitude: 67.0011 },
+        displayName: "Karachi, Pakistan"
+    },
+    "istanbul": {
+        searchTerms: ["istanbul", "istanbul turkey", "turkey"],
+        coordinates: { latitude: 41.0082, longitude: 28.9784 },
+        displayName: "Istanbul, Turkey"
+    },
+    // Oceania
+    "sydney": {
+        searchTerms: ["sydney", "sydney australia", "australia"],
+        coordinates: { latitude: -33.8688, longitude: 151.2093 },
+        displayName: "Sydney, Australia"
+    },
+    "auckland": {
+        searchTerms: ["auckland", "auckland new zealand", "new zealand"],
+        coordinates: { latitude: -36.8485, longitude: 174.7633 },
+        displayName: "Auckland, New Zealand"
+    },
+    "melbourne": {
+        searchTerms: ["melbourne", "melbourne australia", "australia"],
+        coordinates: { latitude: -37.8136, longitude: 144.9631 },
+        displayName: "Melbourne, Australia"
+    },
+    "brisbane": {
+        searchTerms: ["brisbane", "brisbane australia", "australia"],
+        coordinates: { latitude: -27.4698, longitude: 153.0251 },
+        displayName: "Brisbane, Australia"
+    },
+    "perth": {
+        searchTerms: ["perth", "perth australia", "australia"],
+        coordinates: { latitude: -31.9505, longitude: 115.8605 },
+        displayName: "Perth, Australia"
+    },
+    "wellington": {
+        searchTerms: ["wellington", "wellington new zealand", "new zealand"],
+        coordinates: { latitude: -41.2865, longitude: 174.7762 },
+        displayName: "Wellington, New Zealand"
+    }
+};
+
+// Event listeners
+searchBtn.addEventListener('click', fetchWeatherData);
+searchInput.addEventListener('keyup', (e) => {
+    if (e.key === 'Enter') fetchWeatherData();
+});
+
+// Initialize with Paris data
+window.addEventListener('load', () => {
+    if (!searchInput.value) {
+        searchInput.value = 'Paris';
+    }
+    fetchWeatherData();
+});
+
+// Main weather fetching function
+async function fetchWeatherData() {
+    const searchQuery = searchInput.value.trim().toLowerCase();
+    
+    if (!searchQuery) return;
+    
+    showLoading();
+    
+    try {
+        const cityData = findCityData(searchQuery);
+        
+        if (!cityData) {
+            throw new Error(`City "${searchQuery}" not found in our database`);
+        }
+        
+        const weatherData = await fetchWeatherByCoordinates(
+            cityData.coordinates.latitude, 
+            cityData.coordinates.longitude
+        );
+        
+        if (!weatherData.current || !weatherData.daily) {
+            throw new Error('Incomplete weather data received');
+        }
+        
+        updateWeatherUI(weatherData, cityData);
+        errorMsg.classList.remove('active');
+        
+    } catch (error) {
+        console.error("Weather fetch error:", error);
+        errorMsg.textContent = error.message;
+        showError();
+    } finally {
+        hideLoading();
+    }
+}
+
+// Smart city matching
+function findCityData(searchQuery) {
+    for (const cityKey in cityDatabase) {
+        const city = cityDatabase[cityKey];
+        for (const term of city.searchTerms) {
+            if (term.toLowerCase().includes(searchQuery)) {
+                console.log(`Matched "${searchQuery}" to city "${city.displayName}"`);
+                return city;
+            }
+        }
+    }
+    return null;
+}
+
+// Fetch weather from API
+async function fetchWeatherByCoordinates(latitude, longitude) {
+    const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,rain_sum,sunrise,sunset&timezone=auto`;
+    
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`API request failed with status ${response.status}`);
+    }
+    return await response.json();
+}
+
+// Update UI with weather data
+function updateWeatherUI(weatherData, cityData) {
+    locationElement.textContent = cityData.displayName;
+    
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    dateElement.textContent = new Date().toLocaleDateString('en-US', options);
+    
+    const current = weatherData.current;
+    temperatureElement.textContent = `${Math.round(current.temperature_2m)}°C`;
+    
+    const weatherInfoData = getWeatherInfo(current.weather_code);
+    weatherIcon.src = getWeatherIconPath(current.weather_code);
+    conditionText.textContent = weatherInfoData.description;
+    
+    const daily = weatherData.daily;
+    tempRange.textContent = `${Math.round(daily.temperature_2m_min[0])}°C - ${Math.round(daily.temperature_2m_max[0])}°C`;
+    humidity.textContent = `${current.relative_humidity_2m}%`;
+    rain.textContent = `${daily.rain_sum[0]} mm`;
+    
+    const formatTime = (dateString) => {
+        const date = new Date(dateString);
+        return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    };
+    sunTimes.textContent = `${formatTime(daily.sunrise[0])} - ${formatTime(daily.sunset[0])}`;
+    
+    weatherInfo.style.display = 'block';
+}
+
+// Weather code mappings
+function getWeatherInfo(code) {
+    const codes = {
+        0: 'Clear sky', 1: 'Mainly clear', 2: 'Partly cloudy', 3: 'Overcast',
+        45: 'Fog', 48: 'Rime fog', 51: 'Light drizzle', 53: 'Moderate drizzle',
+        55: 'Dense drizzle', 56: 'Freezing drizzle', 57: 'Dense freezing drizzle',
+        61: 'Light rain', 63: 'Moderate rain', 65: 'Heavy rain',
+        66: 'Freezing rain', 67: 'Heavy freezing rain', 71: 'Light snow',
+        73: 'Moderate snow', 75: 'Heavy snow', 77: 'Snow grains',
+        80: 'Light showers', 81: 'Moderate showers', 82: 'Violent showers',
+        85: 'Light snow showers', 86: 'Heavy snow showers', 95: 'Thunderstorm',
+        96: 'Thunderstorm with hail', 99: 'Heavy thunderstorm with hail'
+    };
+    return { description: codes[code] || 'Unknown weather' };
+}
+
+function getWeatherIconPath(code) {
+    if (code === 0) return 'https://openweathermap.org/img/wn/01d@2x.png';
+    if (code <= 3) return 'https://openweathermap.org/img/wn/02d@2x.png';
+    if (code <= 48) return 'https://openweathermap.org/img/wn/50d@2x.png';
+    if (code <= 57) return 'https://openweathermap.org/img/wn/09d@2x.png';
+    if (code <= 67) return 'https://openweathermap.org/img/wn/10d@2x.png';
+    if (code <= 77) return 'https://openweathermap.org/img/wn/13d@2x.png';
+    if (code <= 82) return 'https://openweathermap.org/img/wn/09d@2x.png';
+    if (code <= 86) return 'https://openweathermap.org/img/wn/13d@2x.png';
+    return 'https://openweathermap.org/img/wn/11d@2x.png';
+}
+
+// UI state functions
+function showLoading() {
+    console.log('Showing loading indicator');
+    loadingIndicator.classList.add('active');
+    weatherInfo.style.display = 'none';
+    errorMsg.classList.remove('active');
+}
+
+function hideLoading() {
+    console.log('Hiding loading indicator');
+    loadingIndicator.classList.remove('active');
+}
+
+function showError() {
+    console.log('Showing error message');
+    errorMsg.classList.add('active');
+    weatherInfo.style.display = 'none';
+}
+    </script>
+</body>
+</html>
